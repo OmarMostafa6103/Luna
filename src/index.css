@@ -1,0 +1,500 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  color-scheme: light;
+  color: rgb(75, 56, 48);
+  background-color: rgb(208, 191, 168);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Arabic Font Support */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  direction: rtl;
+  text-align: right;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, rgb(208, 191, 168) 0%, #ffffff 50%, rgb(208, 191, 168) 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 1rem;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.75rem; }
+h4 { font-size: 1.5rem; }
+h5 { font-size: 1.25rem; }
+h6 { font-size: 1rem; }
+
+p {
+  margin-bottom: 1rem;
+  line-height: 1.7;
+}
+
+/* Links */
+a {
+  font-weight: 500;
+  color: rgb(110, 49, 12);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  color: rgb(75, 56, 48);
+  text-decoration: underline;
+}
+
+/* Buttons */
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.75em 1.5em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: rgb(110, 49, 12);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Cairo', sans-serif;
+}
+
+button:hover {
+  background-color: rgb(75, 56, 48);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(110, 49, 12, 0.3);
+}
+
+button:focus,
+button:focus-visible {
+  outline: 2px solid rgb(110, 49, 12);
+  outline-offset: 2px;
+}
+
+/* Form Elements */
+input, select, textarea {
+  font-family: 'Cairo', sans-serif;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: rgb(110, 49, 12);
+  box-shadow: 0 0 0 3px rgba(110, 49, 12, 0.1);
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-family: 'Cairo', sans-serif;
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: right;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+  background-color: rgb(110, 49, 12);
+  color: white;
+  font-weight: 600;
+}
+
+tr:hover {
+  background-color: rgba(208, 191, 168, 0.1);
+}
+
+/* Responsive Design - Mobile First */
+@media (max-width: 640px) {
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  h4 { font-size: 1.1rem; }
+  h5 { font-size: 1rem; }
+  h6 { font-size: 0.9rem; }
+  
+  body {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  /* تحسين الأزرار للشاشات الصغيرة */
+  button {
+    padding: 0.6em 1.2em;
+    font-size: 0.9em;
+  }
+  
+  /* تحسين الحقول للشاشات الصغيرة */
+  input, select, textarea {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+  
+  /* تحسين الجداول للشاشات الصغيرة */
+  table {
+    font-size: 0.8rem;
+  }
+  
+  th, td {
+    padding: 0.5rem 0.25rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+  h4 { font-size: 1.25rem; }
+  h5 { font-size: 1.1rem; }
+  h6 { font-size: 1rem; }
+  
+  body {
+    padding: 1rem;
+  }
+  
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  h1 { font-size: 2.25rem; }
+  h2 { font-size: 1.875rem; }
+  h3 { font-size: 1.625rem; }
+  h4 { font-size: 1.375rem; }
+  h5 { font-size: 1.125rem; }
+  h6 { font-size: 1rem; }
+  
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  h1 { font-size: 2.5rem; }
+  h2 { font-size: 2rem; }
+  h3 { font-size: 1.75rem; }
+  h4 { font-size: 1.5rem; }
+  h5 { font-size: 1.25rem; }
+  h6 { font-size: 1rem; }
+  
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* تحسينات خاصة للشاشات الكبيرة جداً */
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  h1 { font-size: 3rem; }
+  h2 { font-size: 2.5rem; }
+}
+
+/* تحسينات للشاشات الصغيرة جداً */
+@media (max-width: 480px) {
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.1rem; }
+  
+  body {
+    padding: 0.25rem;
+    font-size: 0.85rem;
+  }
+  
+  button {
+    padding: 0.5em 1em;
+    font-size: 0.85em;
+  }
+  
+  input, select, textarea {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+  
+  /* تحسين المسافات للشاشات الصغيرة */
+  .space-y-4 > * + * {
+    margin-top: 0.75rem;
+  }
+  
+  .space-y-6 > * + * {
+    margin-top: 1rem;
+  }
+  
+  .space-y-8 > * + * {
+    margin-top: 1.5rem;
+  }
+}
+
+/* تحسينات للشاشات المتوسطة */
+@media (min-width: 481px) and (max-width: 768px) {
+  /* تحسين الشبكات للشاشات المتوسطة */
+  .grid {
+    gap: 1rem;
+  }
+  
+  /* تحسين البطاقات للشاشات المتوسطة */
+  .card {
+    padding: 1.25rem;
+  }
+}
+
+/* تحسينات للشاشات الكبيرة */
+@media (min-width: 769px) {
+  /* تحسين الشبكات للشاشات الكبيرة */
+  .grid {
+    gap: 1.5rem;
+  }
+  
+  /* تحسين البطاقات للشاشات الكبيرة */
+  .card {
+    padding: 1.5rem;
+  }
+  
+  /* تحسين المسافات للشاشات الكبيرة */
+  .space-y-4 > * + * {
+    margin-top: 1.5rem;
+  }
+  
+  .space-y-6 > * + * {
+    margin-top: 2rem;
+  }
+  
+  .space-y-8 > * + * {
+    margin-top: 2.5rem;
+  }
+}
+
+/* تحسينات خاصة للوضع الأفقي على الموبايل */
+@media (max-width: 768px) and (orientation: landscape) {
+  body {
+    padding: 0.5rem;
+  }
+  
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  
+  /* تقليل المسافات في الوضع الأفقي */
+  .space-y-4 > * + * {
+    margin-top: 0.5rem;
+  }
+  
+  .space-y-6 > * + * {
+    margin-top: 0.75rem;
+  }
+  
+  .space-y-8 > * + * {
+    margin-top: 1rem;
+  }
+}
+
+/* تحسينات للطباعة */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .print-receipt, .print-receipt * {
+    visibility: visible !important;
+  }
+  .print-receipt {
+    position: absolute !important;
+    left: 0; top: 0;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    max-width: 100vw;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+    z-index: 9999;
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .print-receipt .watermark-bg {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 0.22 !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    filter: grayscale(1) contrast(1.2) !important;
+  }
+  .print-receipt > *:not(.watermark-bg) {
+    position: relative;
+    z-index: 2;
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(110, 49, 12);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(75, 56, 48);
+}
+
+/* تحسين شريط التمرير للشاشات الصغيرة */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+}
+
+/* Loading States */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Success/Error States */
+.success {
+  color: #059669;
+  background-color: #d1fae5;
+  border-color: #10b981;
+}
+
+.error {
+  color: #dc2626;
+  background-color: #fee2e2;
+  border-color: #ef4444;
+}
+
+.warning {
+  color: #d97706;
+  background-color: #fef3c7;
+  border-color: #f59e0b;
+}
+
+/* تحسينات إضافية للتفاعل */
+@media (hover: hover) {
+  /* تأثيرات hover فقط للأجهزة التي تدعمها */
+  .hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(110, 49, 12, 0.3);
+  }
+}
+
+@media (hover: none) {
+  /* إزالة تأثيرات hover للأجهزة التي لا تدعمها */
+  .hover-lift:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  button:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* تحسينات للأداء */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* تحسين الخطوط للشاشات المختلفة */
+@media (max-width: 768px) {
+  body {
+    font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+/* تحسين التباين للقراءة */
+@media (prefers-contrast: high) {
+  :root {
+    color: #000000;
+    background-color: #ffffff;
+  }
+  
+  .bg-brand-dark {
+    background-color: #000000 !important;
+  }
+  
+  .text-brand-dark {
+    color: #000000 !important;
+  }
+}
+
+/* تحسين الحركة للمستخدمين الذين يفضلون تقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .animate-fade-in-up,
+  .animate-slide-in-right,
+  .animate-pulse {
+    animation: none !important;
+  }
+}
