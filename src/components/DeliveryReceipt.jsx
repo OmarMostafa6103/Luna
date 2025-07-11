@@ -1106,6 +1106,85 @@ const DeliveryReceipt = () => {
   const [selectedId, setSelectedId] = useState("");
   const selectedOrder = orders.find((o) => o.id === Number(selectedId));
   const printRef = useRef(null);
+  const [whatsAppNumber, setWhatsAppNumber] = useState("");
+
+  // أرقام الواتساب المحفوظة
+  const [savedWhatsAppNumbers, setSavedWhatsAppNumbers] = useState(() => {
+    const saved = localStorage.getItem("savedWhatsAppNumbers");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [whatsAppName, setWhatsAppName] = useState("");
+
+  // توليد نص الرسالة للواتساب
+  const getWhatsAppMessage = () => {
+    if (!selectedOrder) return "";
+    const total = selectedOrder.products.reduce(
+      (sum, p) => sum + (Number(p.price) || 0) * (Number(p.quantity) || 0),
+      0
+    );
+    // المنتجات كسطر واحد
+    const productsText = selectedOrder.products
+      .map((p) => p.type)
+      .filter(Boolean)
+      .join(" + ");
+    return (
+      `إيصال طلب جديد:\n` +
+      `اسم العميل: ${selectedOrder.customerName}\n` +
+      `رقم الموبايل: ${selectedOrder.phone}\n` +
+      `الطلب  :  ${productsText}\n` +
+      `العنوان: ${selectedOrder.address}\n` +
+      `السعر الكلي: ${total} جنيه\n`
+    );
+  };
+
+  // فتح واتساب مع الرسالة
+  const handleSendWhatsApp = () => {
+    if (!whatsAppNumber || !selectedOrder) return;
+    let phone = whatsAppNumber.replace(/[^\d]/g, "");
+    // إذا كان الرقم يبدأ بـ0 وعدده 11 رقم (مصر)، حوّله إلى دولي
+    if (phone.length === 11 && phone.startsWith("0")) {
+      phone = "2" + phone; // 2 هو أول رقم من كود مصر (20)
+    }
+    // إذا كان الرقم لا يبدأ بكود دولة، أضف كود مصر افتراضيًا
+    if (!phone.startsWith("20") && phone.length <= 11) {
+      phone = "20" + phone.replace(/^0/, "");
+    }
+    const msg = encodeURIComponent(getWhatsAppMessage());
+    window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+  };
+
+  // حفظ رقم جديد
+  const handleSaveWhatsAppNumber = () => {
+    const phone = whatsAppNumber.replace(/[^\d]/g, "");
+    if (!phone || !whatsAppName) return;
+    // لا تكرر الرقم
+    if (savedWhatsAppNumbers.some((n) => n.phone === phone)) return;
+    const updated = [...savedWhatsAppNumbers, { name: whatsAppName, phone }];
+    setSavedWhatsAppNumbers(updated);
+    localStorage.setItem("savedWhatsAppNumbers", JSON.stringify(updated));
+    setWhatsAppNumber("");
+    setWhatsAppName("");
+  };
+
+  // حذف رقم محفوظ
+  const handleDeleteWhatsAppNumber = (phone) => {
+    const updated = savedWhatsAppNumbers.filter((n) => n.phone !== phone);
+    setSavedWhatsAppNumbers(updated);
+    localStorage.setItem("savedWhatsAppNumbers", JSON.stringify(updated));
+  };
+
+  // عند اختيار رقم من القائمة
+  const handleSelectSavedNumber = (e) => {
+    const phone = e.target.value;
+    const found = savedWhatsAppNumbers.find((n) => n.phone === phone);
+    if (found) {
+      setWhatsAppNumber(found.phone);
+      setWhatsAppName(found.name);
+    } else {
+      setWhatsAppNumber("");
+      setWhatsAppName("");
+    }
+  };
 
   useEffect(() => {
     if (printRef.current && selectedOrder) {
@@ -1350,6 +1429,99 @@ const DeliveryReceipt = () => {
         </select>
       </div>
       {selectedOrder && (
+        <>
+          {/* ملخص بيانات الطلب للواتساب */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 max-w-lg mx-auto">
+            <h4 className="font-bold text-blue-800 mb-2 text-lg">ملخص الطلب لإرساله عبر واتساب:</h4>
+            <table className="w-full text-right mb-2">
+              <tbody>
+                <tr>
+                  <td className="font-bold text-blue-900">اسم العميل:</td>
+                  <td>{selectedOrder.customerName}</td>
+                </tr>
+                <tr>
+                  <td className="font-bold text-blue-900">رقم الموبايل:</td>
+                  <td>{selectedOrder.phone}</td>
+                </tr>
+                <tr>
+                  <td className="font-bold text-blue-900">الطلب:</td>
+                  <td>{selectedOrder.products.map((p) => p.type).filter(Boolean).join(" + ")}</td>
+                </tr>
+                <tr>
+                  <td className="font-bold text-blue-900">العنوان:</td>
+                  <td>{selectedOrder.address}</td>
+                </tr>
+                <tr>
+                  <td className="font-bold text-blue-900">السعر الكلي:</td>
+                  <td>{selectedOrder.products.reduce((sum, p) => sum + (Number(p.price) || 0) * (Number(p.quantity) || 0), 0)} جنيه</td>
+                </tr>
+              </tbody>
+            </table>
+            {/* قائمة الأرقام المحفوظة */}
+            <div className="flex flex-col md:flex-row gap-2 items-stretch mt-2 w-full max-w-full">
+              <select
+                className="border border-blue-300 rounded-lg px-3 py-2 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                onChange={handleSelectSavedNumber}
+                value={whatsAppNumber || ""}
+              >
+                <option value="">اختر رقم محفوظ...</option>
+                {savedWhatsAppNumbers.map((n) => (
+                  <option key={n.phone} value={n.phone}>
+                    {n.name} - {n.phone}
+                  </option>
+                ))}
+              </select>
+              {/* زر حذف الرقم المحفوظ */}
+              {whatsAppNumber && savedWhatsAppNumbers.some((n) => n.phone === whatsAppNumber) && (
+                <button
+                  type="button"
+                  className="text-red-600 font-bold px-2 py-1 rounded hover:bg-red-100 w-full md:w-auto"
+                  onClick={() => handleDeleteWhatsAppNumber(whatsAppNumber)}
+                >
+                  حذف
+                </button>
+              )}
+            </div>
+            {/* إدخال اسم ورقم جديد وحفظهما */}
+            <div className="flex flex-col md:flex-row gap-2 items-stretch mt-2 w-full max-w-full">
+              <input
+                type="text"
+                className="border border-blue-300 rounded-lg px-3 py-2 w-full md:w-48 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="اسم صاحب الرقم"
+                value={whatsAppName}
+                onChange={e => setWhatsAppName(e.target.value)}
+              />
+              <input
+                type="text"
+                className="border border-blue-300 rounded-lg px-3 py-2 w-full md:w-48 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="رقم واتساب (مثال: 201234567890)"
+                value={whatsAppNumber}
+                onChange={e => setWhatsAppNumber(e.target.value)}
+              />
+              <button
+                onClick={handleSaveWhatsAppNumber}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-blue-600 transition w-full md:w-auto"
+                type="button"
+                disabled={!whatsAppName || !whatsAppNumber}
+              >
+                حفظ الرقم
+              </button>
+            </div>
+            {/* زر إرسال إلى واتساب */}
+            <div className="flex flex-col md:flex-row gap-2 items-stretch mt-2 w-full max-w-full">
+              <button
+                onClick={handleSendWhatsApp}
+                className="bg-green-500 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-green-600 transition w-full md:w-auto"
+                disabled={!whatsAppNumber}
+                type="button"
+              >
+                إرسال إلى واتساب
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+      {selectedOrder && (
         <div
           ref={printRef}
           className="print-receipt bg-white border border-blue-300 rounded-2xl p-8 shadow-2xl max-w-lg mb-8 print:border-0 print:shadow-none relative overflow-hidden"
@@ -1446,7 +1618,7 @@ const DeliveryReceipt = () => {
         <div className="flex gap-4">
           <button
             onClick={handleExportWord}
-            className="bg-blue-600 text-whitepx-4 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition"
           >
             تصدير إلى Word
           </button>

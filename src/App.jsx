@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import OrderForm from './components/OrderForm';
 import OrderTable from './components/OrderTable';
 import KitchenDashboard from './components/KitchenDashboard';
@@ -20,7 +20,7 @@ function App() {
     <OrdersProvider>
       <InventoryProvider>
         <ProductsProvider>
-          <Router>
+          <HashRouter>
             <div className="flex flex-col min-h-screen bg-gradient-to-br from-brand-beige via-white to-brand-beige/30">
               {/* شريط التنقل العلوي */}
               <Navbar />
@@ -44,7 +44,7 @@ function App() {
               {/* الفوتر السفلي */}
               <Footer />
             </div>
-          </Router>
+          </HashRouter>
         </ProductsProvider>
       </InventoryProvider>
     </OrdersProvider>
