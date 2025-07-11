@@ -13,6 +13,7 @@ import { OrdersProvider } from './contexts/OrdersContext';
 import { InventoryProvider } from './contexts/InventoryContext';
 import { ProductsProvider } from './contexts/ProductsContext';
 import DeliveryReceipt from './components/DeliveryReceipt';
+import CustomerStats from './components/CustomerStats';
 import './App.css';
 
 function App() {
@@ -28,7 +29,7 @@ function App() {
               {/* محتوى الصفحات */}
               <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <Alerts />
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 animate-fadein">
                   <Routes>
                     <Route path="/" element={<OrderForm />} />
                     <Route path="/orders" element={<OrderTable />} />
@@ -37,6 +38,7 @@ function App() {
                     <Route path="/products" element={<ProductForm />} />
                     <Route path="/reports" element={<ReportsAnalytics />} />
                     <Route path="/receipt" element={<DeliveryReceipt />} />
+                    <Route path="/customer-stats" element={<CustomerStats />} />
                   </Routes>
                 </div>
               </main>

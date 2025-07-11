@@ -15,6 +15,7 @@ const Navbar = () => {
     { to: '/products', label: 'المنتجات', icon: '🍽️' },
     { to: '/reports', label: 'التقارير والتحليلات', icon: '📊' },
     { to: '/receipt', label: 'إيصال المندوب', icon: '🧾' },
+    { to: '/customer-stats', label: 'إحصائيات العملاء', icon: '👥' }, // Added link
   ];
 
   const toggleMenu = () => {
