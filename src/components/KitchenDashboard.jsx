@@ -12,7 +12,13 @@ import {
 const getToday = () => new Date().toISOString().slice(0, 10);
 
 const KitchenDashboard = () => {
-  const { orders, completedOrders, setOrders, setCompletedOrders, addCompletedOrder } = useContext(OrdersContext);
+  const {
+    orders,
+    completedOrders,
+    setOrders,
+    setCompletedOrders,
+    addCompletedOrder,
+  } = useContext(OrdersContext);
   const today = getToday();
 
   // جلب جميع الطلبات التي لم يتم تنفيذها (بدون فلترة التاريخ)
@@ -55,16 +61,22 @@ const KitchenDashboard = () => {
 
   // حالة الإنجاز لكل طلب (وليس لكل نوع)
   const [orderDoneCounts, setOrderDoneCounts] = useState(() => {
-    const saved = localStorage.getItem("kitchenOrderDoneCounts");
-    return saved ? JSON.parse(saved) : {};
+    try {
+      const saved = localStorage.getItem("kitchenOrderDoneCounts");
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
   });
 
   // حفظ التغييرات في localStorage
   useEffect(() => {
-    localStorage.setItem(
-      "kitchenOrderDoneCounts",
-      JSON.stringify(orderDoneCounts)
-    );
+    try {
+      localStorage.setItem(
+        "kitchenOrderDoneCounts",
+        JSON.stringify(orderDoneCounts)
+      );
+    } catch (e) {}
   }, [orderDoneCounts]);
 
   // تحديث عدد المنجز لمنتج معين في طلب معين
@@ -89,9 +101,17 @@ const KitchenDashboard = () => {
   const [toast, setToast] = useState(null);
 
   const [kitchenCompletedOrders, setKitchenCompletedOrders] = useState(() => {
-    const saved = localStorage.getItem('kitchenCompletedOrders');
-    const now = Date.now();
-    return saved ? JSON.parse(saved).filter(o => now - o.completedAt < 24*60*60*1000) : [];
+    try {
+      const saved = localStorage.getItem("kitchenCompletedOrders");
+      const now = Date.now();
+      return saved
+        ? JSON.parse(saved).filter(
+            (o) => now - o.completedAt < 24 * 60 * 60 * 1000
+          )
+        : [];
+    } catch (e) {
+      return [];
+    }
   });
 
   // الإنجاز التلقائي للطلبات
@@ -105,7 +125,7 @@ const KitchenDashboard = () => {
       if (allDone && !autoCompleted.includes(order.id)) {
         setOrders((prev) => prev.filter((o) => o.id !== order.id));
         const completedOrder = { ...order, completedAt: Date.now() };
-        setKitchenCompletedOrders(prev => [...prev, completedOrder]);
+        setKitchenCompletedOrders((prev) => [...prev, completedOrder]);
         addCompletedOrder(completedOrder); // إضافة للطلبات المنجزة
         setAutoCompleted((prev) => [...prev, order.id]);
         setToast({
@@ -150,12 +170,19 @@ const KitchenDashboard = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
-      setKitchenCompletedOrders(prev => prev.filter(o => now - o.completedAt < 24*60*60*1000));
-    }, 60*1000); // كل دقيقة
+      setKitchenCompletedOrders((prev) =>
+        prev.filter((o) => now - o.completedAt < 24 * 60 * 60 * 1000)
+      );
+    }, 60 * 1000); // كل دقيقة
     return () => clearInterval(interval);
   }, []);
   useEffect(() => {
-    localStorage.setItem('kitchenCompletedOrders', JSON.stringify(kitchenCompletedOrders));
+    try {
+      localStorage.setItem(
+        "kitchenCompletedOrders",
+        JSON.stringify(kitchenCompletedOrders)
+      );
+    } catch (e) {}
   }, [kitchenCompletedOrders]);
 
   return (
@@ -200,7 +227,9 @@ const KitchenDashboard = () => {
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl p-4 sm:p-6 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-xs sm:text-sm">إجمالي المطلوب</p>
+                <p className="text-orange-100 text-xs sm:text-sm">
+                  إجمالي المطلوب
+                </p>
                 <p className="text-xl sm:text-2xl font-bold">{totalPending}</p>
               </div>
               <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white/20 rounded-lg flex items-center justify-center">
@@ -238,7 +267,9 @@ const KitchenDashboard = () => {
           <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl p-4 sm:p-6 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-xs sm:text-sm">نسبة الإنجاز</p>
+                <p className="text-purple-100 text-xs sm:text-sm">
+                  نسبة الإنجاز
+                </p>
                 <p className="text-xl sm:text-2xl font-bold">
                   {totalPending > 0
                     ? Math.round((totalDone / totalPending) * 100)
@@ -294,78 +325,157 @@ const KitchenDashboard = () => {
                       </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {govOrders.map((order) => {
-                        const doneForOrder = orderDoneCounts[order.id] || {};
-                        const allDone = order.products.every((p) => {
-                          const done = doneForOrder[p.type] || 0;
-                          return done >= Number(p.quantity);
-                        });
-                        return (
-                          <div
-                            key={order.id}
-                            className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4 flex flex-col gap-2 mb-4"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-bold text-orange-800 text-lg">
+                    <>
+                      {/* كروت على الموبايل */}
+                      <div className="block sm:hidden space-y-4">
+                        {govOrders.map((order, idx) => {
+                          const doneForOrder = orderDoneCounts[order.id] || {};
+                          const allDone = order.products.every((p) => {
+                            const done = doneForOrder[p.type] || 0;
+                            return done >= Number(p.quantity);
+                          });
+                          return (
+                            <div
+                              key={order?.id ? `order-${order.id}` : `row-${idx}`}
+                              className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4 flex flex-col gap-2"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-bold text-orange-800">
                                   {order.products.map((p) => p.type).join(", ")}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  محافظة: {order.governorate}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  تاريخ: {order.date}
-                                </p>
+                                </span>
+                                <span className="bg-orange-200 text-orange-900 px-2 py-1 rounded text-xs">
+                                  {order.governorate}
+                                </span>
                               </div>
-                              <span className="bg-orange-200 text-orange-900 px-3 py-1 rounded-full text-sm font-bold">
-                                {order.products.reduce(
-                                  (sum, p) => sum + Number(p.quantity),
-                                  0
-                                )}{" "}
-                                مطلوب
-                              </span>
+                              <div className="text-xs text-gray-500 mb-1">
+                                تاريخ: {order.date}
+                              </div>
+                              <div className="flex flex-wrap gap-2 mb-2">
+                                {order.products && order.products.map((p, i) => (
+                                  <span
+                                    key={p.type + '-' + i}
+                                    className="bg-orange-100 text-orange-900 px-2 py-1 rounded text-xs"
+                                  >
+                                    {p.type}: {p.quantity}
+                                  </span>
+                                ))}
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {order.products && order.products.map((p, i) => (
+                                  <div
+                                    key={p.type + '-' + i}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <span className="text-xs font-semibold text-brand-dark">
+                                      {p.type}:
+                                    </span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max={p.quantity}
+                                      value={doneForOrder[p.type] || ""}
+                                      onChange={(e) =>
+                                        handleOrderDoneChange(
+                                          order?.id ?? idx,
+                                          p.type,
+                                          e.target.value
+                                        )
+                                      }
+                                      className="w-14 border-2 border-gray-200 rounded-lg px-1 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
+                                      placeholder={`0 من ${p.quantity}`}
+                                      disabled={allDone}
+                                    />
+                                    <span className="text-xs text-gray-500">
+                                      من {p.quantity}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                              {allDone && (
+                                <span className="mt-2 text-green-700 font-bold text-xs">
+                                  مكتمل بنجاح!
+                                </span>
+                              )}
                             </div>
-                            <div className="flex flex-wrap gap-4 mt-2">
-                              {order.products.map((p, i) => (
-                                <div
-                                  key={i}
-                                  className="flex items-center gap-2"
-                                >
-                                  <span className="text-sm font-semibold text-brand-dark">
-                                    {p.type}:
-                                  </span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    max={p.quantity}
-                                    value={doneForOrder[p.type] || ""}
-                                    onChange={(e) =>
-                                      handleOrderDoneChange(
-                                        order.id,
-                                        p.type,
-                                        e.target.value
-                                      )
-                                    }
-                                    className="w-20 border-2 border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
-                                    placeholder={`0 من ${p.quantity}`}
-                                    disabled={allDone}
-                                  />
-                                  <span className="text-xs text-gray-500">
-                                    من {p.quantity}
-                                  </span>
+                          );
+                        })}
+                      </div>
+                      {/* شبكة (grid) على الشاشات الأكبر */}
+                      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {govOrders.map((order, idx) => {
+                          const doneForOrder = orderDoneCounts[order.id] || {};
+                          const allDone = order.products.every((p) => {
+                            const done = doneForOrder[p.type] || 0;
+                            return done >= Number(p.quantity);
+                          });
+                          return (
+                            <div
+                              key={order?.id ? `order-${order.id}` : `row-${idx}`}
+                              className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4 flex flex-col gap-2 mb-4"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-bold text-orange-800 text-lg">
+                                    {order.products
+                                      .map((p) => p.type)
+                                      .join(", ")}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    محافظة: {order.governorate}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    تاريخ: {order.date}
+                                  </p>
                                 </div>
-                              ))}
+                                <span className="bg-orange-200 text-orange-900 px-3 py-1 rounded-full text-sm font-bold">
+                                  {order.products.reduce(
+                                    (sum, p) => sum + Number(p.quantity),
+                                    0
+                                  )}{" "}
+                                  مطلوب
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-4 mt-2">
+                                {order.products && order.products.map((p, i) => (
+                                  <div
+                                    key={p.type + '-' + i}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <span className="text-sm font-semibold text-brand-dark">
+                                      {p.type}:
+                                    </span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max={p.quantity}
+                                      value={doneForOrder[p.type] || ""}
+                                      onChange={(e) =>
+                                        handleOrderDoneChange(
+                                          order?.id ?? idx,
+                                          p.type,
+                                          e.target.value
+                                        )
+                                      }
+                                      className="w-20 border-2 border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
+                                      placeholder={`0 من ${p.quantity}`}
+                                      disabled={allDone}
+                                    />
+                                    <span className="text-xs text-gray-500">
+                                      من {p.quantity}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                              {allDone && (
+                                <span className="mt-2 text-green-700 font-bold">
+                                  مكتمل بنجاح!
+                                </span>
+                              )}
                             </div>
-                            {allDone && (
-                              <span className="mt-2 text-green-700 font-bold">
-                                مكتمل بنجاح!
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
+                    </>
                   )}
                 </div>
                 {/* قائمة الوجبات */}
@@ -508,9 +618,9 @@ const KitchenDashboard = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredPendingOrders.map((order) => (
+                  {filteredPendingOrders.map((order, idx) => (
                     <div
-                      key={order.id}
+                      key={order?.id ? `order-${order.id}` : `row-${idx}`}
                       className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4 flex items-center justify-between"
                     >
                       <div>
@@ -730,28 +840,71 @@ const KitchenDashboard = () => {
           </span>
         </div>
       )}
-      {(kitchenCompletedOrders.length > 0) && (
+      {kitchenCompletedOrders.length > 0 && (
         <div className="mt-12">
-          <h2 className="text-xl font-bold text-green-700 mb-4 text-center">الطلبات المكتملة (آخر 24 ساعة)</h2>
-          <div className="overflow-x-auto rounded-2xl shadow-lg border border-green-200 bg-white/90">
-            <table className="min-w-[600px] w-full text-center text-xs sm:text-base">
+          <h2 className="text-xl font-bold text-green-700 mb-4 text-center">
+            الطلبات المكتملة (آخر 24 ساعة)
+          </h2>
+          {/* عرض كروت على الموبايل وجدول على الشاشات الأكبر */}
+          <div className="block sm:hidden space-y-4">
+            {kitchenCompletedOrders.map((order, idx) => (
+              <div
+                key={order?.id ? `order-${order.id}` : `row-${idx}`}
+                className="bg-white rounded-xl shadow-lg border border-green-200 p-4 flex flex-col gap-2"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-green-900">
+                    {order.customerName}
+                  </span>
+                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                    {order.governorate}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500 mb-1">
+                  {new Date(order.completedAt).toLocaleString()}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {order.products && order.products.map((p, i) => (
+                    <span
+                      key={p.type + "-" + i}
+                      className="bg-green-200 text-green-900 px-2 py-1 rounded text-xs"
+                    >
+                      {p.type} ({p.quantity})
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden sm:block overflow-x-auto rounded-2xl shadow-lg border border-green-200 bg-white/90">
+            <table className="min-w-[320px] sm:min-w-[600px] w-full text-center text-xs sm:text-base">
               <thead>
                 <tr className="bg-green-100 text-green-800 text-base sm:text-lg">
-                  <th className="py-2 px-4">اسم العميل</th>
-                  <th className="py-2 px-4">المحافظة</th>
-                  <th className="py-2 px-4">تاريخ الإنجاز</th>
-                  <th className="py-2 px-4">المنتجات</th>
+                  <th className="py-2 px-2 sm:px-4">اسم العميل</th>
+                  <th className="py-2 px-2 sm:px-4">المحافظة</th>
+                  <th className="py-2 px-2 sm:px-4">تاريخ الإنجاز</th>
+                  <th className="py-2 px-2 sm:px-4">المنتجات</th>
                 </tr>
               </thead>
               <tbody>
                 {kitchenCompletedOrders.map((order, idx) => (
-                  <tr key={order.id ? `order-${order.id}` : `row-${idx}`} className="border-t hover:bg-green-50 transition">
-                    <td className="py-2 px-4 font-semibold">{order.customerName}</td>
-                    <td className="py-2 px-4">{order.governorate}</td>
-                    <td className="py-2 px-4">{new Date(order.completedAt).toLocaleString()}</td>
-                    <td className="py-2 px-4">
-                      {order.products.map((p, i) => (
-                        <span key={p.type + '-' + i} className="bg-green-200 text-green-900 px-2 py-1 rounded text-xs mx-1">
+                  <tr
+                    key={order?.id ? `order-${order.id}` : `row-${idx}`}
+                    className="border-t hover:bg-green-50 transition"
+                  >
+                    <td className="py-2 px-2 sm:px-4 font-semibold">
+                      {order.customerName}
+                    </td>
+                    <td className="py-2 px-2 sm:px-4">{order.governorate}</td>
+                    <td className="py-2 px-2 sm:px-4">
+                      {new Date(order.completedAt).toLocaleString()}
+                    </td>
+                    <td className="py-2 px-2 sm:px-4">
+                      {order.products && order.products.map((p, i) => (
+                        <span
+                          key={p.type + "-" + i}
+                          className="bg-green-200 text-green-900 px-2 py-1 rounded text-xs mx-1"
+                        >
                           {p.type} ({p.quantity})
                         </span>
                       ))}
