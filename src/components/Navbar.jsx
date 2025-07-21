@@ -15,7 +15,10 @@ const Navbar = () => {
     { to: '/products', label: 'المنتجات', icon: '🍽️' },
     { to: '/reports', label: 'التقارير والتحليلات', icon: '📊' },
     { to: '/receipt', label: 'إيصال المندوب', icon: '🧾' },
-    { to: '/customer-stats', label: 'إحصائيات العملاء', icon: '👥' }, // Added link
+    { to: '/customer-stats', label: 'إحصائيات العملاء', icon: '��' }, // Added link
+    { to: '/noted-customers', label: 'عملاء بملاحظات', icon: '🗒️' }, // رابط جديد
+    { to: '/orders-map', label: 'خريطة الطلبات', icon: '��️' }, // رابط جديد
+    { to: '/completed-orders', label: 'الطلبات المنجزة', icon: '✅' }, // رابط جديد للطلبات المنجزة
   ];
 
   const toggleMenu = () => {
@@ -30,7 +33,7 @@ const Navbar = () => {
           <div className="flex items-center space-x-3 space-x-reverse">
             <div className="flex-shrink-0">
               <img 
-                src="/src/assets/luna-logo.png.png" 
+                src="/src/assets/luna-logo.png" 
                 alt="Luna Healthy" 
                 className="h-10 w-10 rounded-full shadow-lg"
                 onError={(e) => {

@@ -29,7 +29,7 @@ const OrderForm = () => {
     address: "",
     orderDate: "",
     source: "",
-    products: [{ type: "", quantity: 1, price: "" }],
+    products: [{ type: "", quantity: 1, price: "", category: "" }],
   });
 
   // حالة لإظهار رسالة نجاح بعد الحفظ
@@ -53,11 +53,21 @@ const OrderForm = () => {
   // حالة إظهار اقتراحات المنتجات لكل منتج
   const [showProductSuggestions, setShowProductSuggestions] = useState([false]);
 
+  // حالة المحافظات المقترحة
+  const [governorates, setGovernorates] = useState(() => {
+    const saved = localStorage.getItem("orderGovernorates");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [showGovSuggestions, setShowGovSuggestions] = useState(false);
+
   // تحديث بيانات النموذج عند التغيير
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     if (e.target.name === "source") {
       setShowSuggestions(true);
+    }
+    if (e.target.name === "governorate") {
+      setShowGovSuggestions(true);
     }
   };
 
@@ -65,11 +75,12 @@ const OrderForm = () => {
   const handleProductChange = (idx, field, value) => {
     const updated = [...form.products];
     updated[idx][field] = value;
-    // إذا تم تغيير اسم المنتج، جلب السعر تلقائيًا إذا كان محفوظًا
+    // إذا تم تغيير اسم المنتج، جلب السعر والتصنيف تلقائيًا إذا كان محفوظًا
     if (field === "type") {
       const found = savedProducts.find((p) => p.type === value);
       if (found) {
         updated[idx].price = found.price;
+        updated[idx].category = found.category || "";
       }
       // إظهار الاقتراحات عند الكتابة
       const showArr = [...showProductSuggestions];
@@ -83,7 +94,7 @@ const OrderForm = () => {
   const addProduct = () => {
     setForm({
       ...form,
-      products: [...form.products, { type: "", quantity: 1, price: "" }],
+      products: [...form.products, { type: "", quantity: 1, price: "", category: "" }],
     });
     setShowProductSuggestions([...showProductSuggestions, false]);
   };
@@ -103,6 +114,12 @@ const OrderForm = () => {
     setShowSuggestions(false);
   };
 
+  // عند اختيار اقتراح محافظة
+  const handleGovSuggestionClick = (suggestion) => {
+    setForm({ ...form, governorate: suggestion });
+    setShowGovSuggestions(false);
+  };
+
   // عند إرسال النموذج
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -114,7 +131,7 @@ const OrderForm = () => {
     if (newProducts.length > 0) {
       const updatedSaved = [
         ...savedProducts,
-        ...newProducts.map((p) => ({ type: p.type, price: p.price })),
+        ...newProducts.map((p) => ({ type: p.type, price: p.price, category: p.category || "" })),
       ];
       setSavedProducts(updatedSaved);
       localStorage.setItem("savedProducts", JSON.stringify(updatedSaved));
@@ -125,6 +142,12 @@ const OrderForm = () => {
       setSources(updatedSources);
       localStorage.setItem("orderSources", JSON.stringify(updatedSources));
     }
+    // إضافة المحافظة الجديدة إذا لم تكن موجودة
+    if (form.governorate && !governorates.includes(form.governorate)) {
+      const updatedGovs = [...governorates, form.governorate];
+      setGovernorates(updatedGovs);
+      localStorage.setItem("orderGovernorates", JSON.stringify(updatedGovs));
+    }
     // إضافة الطلب الجديد إلى قائمة الطلبات
     setOrders([...orders, { ...form, id: Date.now() }]);
     // إعادة تعيين النموذج
@@ -134,7 +157,8 @@ const OrderForm = () => {
       address: "",
       orderDate: "",
       source: "",
-      products: [{ type: "", quantity: 1, price: "" }],
+      governorate: "",
+      products: [{ type: "", quantity: 1, price: "", category: "" }],
     });
     setSuccess(true);
     setTimeout(() => setSuccess(false), 3000);
@@ -145,18 +169,31 @@ const OrderForm = () => {
     ? sources.filter((s) => s.toLowerCase().includes(form.source.toLowerCase()))
     : sources;
 
+  // فلترة اقتراحات المحافظات
+  const filteredGovSuggestions = form.governorate
+    ? governorates.filter((g) => g.toLowerCase().includes(form.governorate.toLowerCase()))
+    : governorates;
+
   let datePickerRef = null;
+
+  // دوال إخفاء القوائم المنسدلة مع تأخير بسيط
+  const handleSourceBlur = () => {
+    setTimeout(() => setShowSuggestions(false), 150);
+  };
+  const handleGovBlur = () => {
+    setTimeout(() => setShowGovSuggestions(false), 150);
+  };
 
   return (
     <div className="animate-fade-in-up">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto px-1 sm:px-4 md:px-8 w-full">
         {/* عنوان الصفحة مع تصميم مميز */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-brand-brown to-brand-dark rounded-full mb-4 shadow-lg">
-            <PlusCircleIcon className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-brand-brown to-brand-dark rounded-full mb-4 shadow-lg">
+            <PlusCircleIcon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-brand-dark mb-2">إدخال طلب جديد</h1>
-          <p className="text-brand-olive text-lg">أدخل تفاصيل الطلب الجديد</p>
+          <h1 className="text-xl sm:text-3xl font-bold text-brand-dark mb-2">إدخال طلب جديد</h1>
+          <p className="text-brand-olive text-base sm:text-lg">أدخل تفاصيل الطلب الجديد</p>
         </div>
 
         {/* رسالة نجاح محسنة */}
@@ -217,6 +254,42 @@ const OrderForm = () => {
               </div>
             </div>
 
+            {/* المحافظة */}
+            <div className="group relative mt-6">
+              <label className="block mb-3 font-semibold text-brand-dark flex items-center gap-2 text-lg">
+                <div className="p-2 bg-yellow-100 rounded-lg group-hover:bg-yellow-200 transition-colors">
+                  <MapPinIcon className="w-5 h-5 text-yellow-600" />
+                </div>
+                المحافظة
+              </label>
+              <input
+                type="text"
+                name="governorate"
+                value={form.governorate || ""}
+                onChange={handleChange}
+                onFocus={() => setShowGovSuggestions(true)}
+                onBlur={handleGovBlur}
+                autoComplete="off"
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 shadow-sm hover:shadow-md bg-white text-brand-dark placeholder:text-gray-400"
+                placeholder="أدخل اسم المحافظة (مثال: القاهرة)"
+                required
+              />
+              {/* اقتراحات المحافظات */}
+              {showGovSuggestions && filteredGovSuggestions.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                  {filteredGovSuggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      onMouseDown={() => handleGovSuggestionClick(suggestion)}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors text-brand-dark"
+                    >
+                      {suggestion}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* العنوان */}
             <div className="group">
               <label className="block mb-3 font-semibold text-brand-dark flex items-center gap-2 text-lg">
@@ -248,16 +321,21 @@ const OrderForm = () => {
                 </label>
                 <DatePicker
                   selected={form.orderDate ? new Date(form.orderDate) : null}
-                  onChange={(date) =>
+                  onChange={(date) => {
+                    const pad = (n) => n.toString().padStart(2, "0");
+                    const localDateString = date
+                      ? `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+                      : "";
                     setForm({
                       ...form,
-                      orderDate: date ? date.toISOString().split("T")[0] : "",
-                    })
-                  }
+                      orderDate: localDateString,
+                    });
+                  }}
                   dateFormat="yyyy/MM/dd"
                   className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 shadow-sm hover:shadow-md bg-white text-brand-dark"
                   placeholderText="اختر التاريخ"
                   ref={(ref) => (datePickerRef = ref)}
+                  required
                 />
               </div>
 
@@ -275,8 +353,10 @@ const OrderForm = () => {
                   value={form.source}
                   onChange={handleChange}
                   onFocus={() => setShowSuggestions(true)}
+                  onBlur={handleSourceBlur}
                   className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 shadow-sm hover:shadow-md bg-white text-brand-dark placeholder:text-gray-400"
                   placeholder="مثال: واتساب، إنستغرام، هاتف"
+                  required
                 />
                 {/* اقتراحات المصادر */}
                 {showSuggestions && filteredSuggestions.length > 0 && (
@@ -284,7 +364,7 @@ const OrderForm = () => {
                     {filteredSuggestions.map((suggestion, index) => (
                       <div
                         key={index}
-                        onClick={() => handleSuggestionClick(suggestion)}
+                        onMouseDown={() => handleSuggestionClick(suggestion)}
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors text-brand-dark"
                       >
                         {suggestion}
@@ -301,7 +381,7 @@ const OrderForm = () => {
               
               {form.products.map((product, idx) => (
                 <div key={idx} className="bg-white rounded-xl p-6 mb-4 shadow-md border border-gray-100 hover:shadow-lg transition-shadow">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {/* نوع المنتج */}
                     <div className="relative">
                       <label className="block mb-2 font-semibold text-brand-dark">نوع المنتج</label>
@@ -328,13 +408,14 @@ const OrderForm = () => {
                               onMouseDown={() => {
                                 handleProductChange(idx, "type", p.type);
                                 handleProductChange(idx, "price", p.price);
+                                handleProductChange(idx, "category", p.category || "");
                                 const showArr = [...showProductSuggestions];
                                 showArr[idx] = false;
                                 setShowProductSuggestions(showArr);
                               }}
                               className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors text-brand-dark"
                             >
-                              {p.type} <span className="text-xs text-brand-olive">({p.price} جنيه)</span>
+                              {p.type} <span className="text-xs text-brand-olive">({p.price} جنيه) {p.category ? `- ${p.category}` : ''}</span>
                             </div>
                           ))}
                         </div>
@@ -365,6 +446,18 @@ const OrderForm = () => {
                         className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300"
                         required
                         placeholder="0.00"
+                      />
+                    </div>
+
+                    {/* التصنيف */}
+                    <div>
+                      <label className="block mb-2 font-semibold text-brand-dark">تصنيف المنتج</label>
+                      <input
+                        type="text"
+                        value={product.category || ""}
+                        onChange={e => handleProductChange(idx, "category", e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300"
+                        placeholder="تصنيف المنتج (اختياري)"
                       />
                     </div>
                   </div>

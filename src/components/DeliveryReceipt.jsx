@@ -357,7 +357,6 @@
 //         printRef.current.style.backgroundImage = `url(${canvas.toDataURL()})`;
 //         printRef.current.style.backgroundRepeat = "repeat"; // تكرار الخلفية إذا لزم الأمر
 //       };
-//     }
 //   }, [selectedOrder]);
 
 //   const handleExportWord = async () => {
@@ -725,7 +724,6 @@
 //         printRef.current.style.backgroundRepeat = "repeat";
 //         printRef.current.style.backgroundPosition = "center";
 //       };
-//     }
 //   }, [selectedOrder]);
 
 //   const handleExportWord = async () => {
@@ -844,7 +842,7 @@
 //                     allowOverlap: true,
 //                   },
 //                 }),
-//                 // صورة إضافية للتكرار
+//                 // إضافة صورة إضافية للتكرار (إذا لزم الأمر)
 //                 new ImageRun({
 //                   data: processedArrayBuffer,
 //                   transformation: { width: 400, height: 500 },
@@ -1102,10 +1100,24 @@ import { saveAs } from "file-saver";
 import logo from "../assets/luna-logo.png.png";
 
 const DeliveryReceipt = () => {
-  const { orders } = useContext(OrdersContext);
+  const { completedOrders } = useContext(OrdersContext);
   const [selectedId, setSelectedId] = useState("");
-  const selectedOrder = orders.find((o) => o.id === Number(selectedId));
+  const [govFilter, setGovFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const printRef = useRef(null);
+  // ترتيب الطلبات المنجزة من الأحدث إلى الأقدم
+  const sortedOrders = [...completedOrders].sort((a, b) => {
+    // إذا كان orderDate غير موجود، اعتبره أقدم
+    if (!a.orderDate) return 1;
+    if (!b.orderDate) return -1;
+    // قارن التواريخ (يفضل أن تكون بصيغة YYYY-MM-DD)
+    return new Date(b.orderDate) - new Date(a.orderDate);
+  });
+  const allGovernorates = Array.from(new Set(sortedOrders.map(o => o.governorate).filter(Boolean)));
+  const allDates = Array.from(new Set(sortedOrders.map(o => o.orderDate).filter(Boolean)));
+  // تصفية الطلبات حسب المحافظة والتاريخ
+  const filteredOrders = govFilter ? sortedOrders.filter(o => o.governorate === govFilter) : sortedOrders;
+  const selectedOrder = filteredOrders.find((o) => o.id === Number(selectedId));
   const [whatsAppNumber, setWhatsAppNumber] = useState("");
 
   // أرقام الواتساب المحفوظة
@@ -1115,42 +1127,33 @@ const DeliveryReceipt = () => {
   });
   const [whatsAppName, setWhatsAppName] = useState("");
 
-  // توليد نص الرسالة للواتساب
-  const getWhatsAppMessage = () => {
-    if (!selectedOrder) return "";
-    const total = selectedOrder.products.reduce(
-      (sum, p) => sum + (Number(p.price) || 0) * (Number(p.quantity) || 0),
-      0
-    );
-    // المنتجات كسطر واحد
-    const productsText = selectedOrder.products
-      .map((p) => p.type)
-      .filter(Boolean)
-      .join(" + ");
-    return (
-      `إيصال طلب جديد:\n` +
-      `اسم العميل: ${selectedOrder.customerName}\n` +
-      `رقم الموبايل: ${selectedOrder.phone}\n` +
-      `الطلب  :  ${productsText}\n` +
-      `العنوان: ${selectedOrder.address}\n` +
-      `السعر الكلي: ${total} جنيه\n`
-    );
+  // دالة توليد نص رسالة واتساب لكل طلب
+  const getWhatsAppMessage = (order) => {
+    if (!order) return "";
+    let msg = `طلب جديد من ${order.customerName}\n`;
+    msg += `رقم الهاتف: ${order.phone}\n`;
+    msg += `العنوان: ${order.address}\n`;
+    msg += `تاريخ الطلب: ${order.orderDate}\n`;
+    msg += `--- المنتجات ---\n`;
+    order.products.forEach((p, i) => {
+      msg += `${i + 1}- ${p.type} × ${p.quantity} = ${p.price ? p.price + " جنيه" : "-"}\n`;
+    });
+    msg += `الإجمالي: ${order.products.reduce((sum, p) => sum + Number(p.price || 0) * Number(p.quantity || 0), 0)} جنيه`;
+    return msg;
   };
 
-  // فتح واتساب مع الرسالة
-  const handleSendWhatsApp = () => {
-    if (!whatsAppNumber || !selectedOrder) return;
-    let phone = whatsAppNumber.replace(/[^\d]/g, "");
-    // إذا كان الرقم يبدأ بـ0 وعدده 11 رقم (مصر)، حوّله إلى دولي
-    if (phone.length === 11 && phone.startsWith("0")) {
-      phone = "2" + phone; // 2 هو أول رقم من كود مصر (20)
-    }
-    // إذا كان الرقم لا يبدأ بكود دولة، أضف كود مصر افتراضيًا
-    if (!phone.startsWith("20") && phone.length <= 11) {
-      phone = "20" + phone.replace(/^0/, "");
-    }
-    const msg = encodeURIComponent(getWhatsAppMessage());
+  // إرسال جميع الطلبات عبر واتساب
+  const handleSendAllWhatsApp = () => {
+    filteredOrders.forEach(order => {
+      const msg = encodeURIComponent(getWhatsAppMessage(order));
+      const phone = order.phone.startsWith("+2") ? order.phone : `+2${order.phone}`;
     window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+    });
+  };
+
+  // طباعة جميع الإيصالات
+  const handlePrintAll = () => {
+    window.print(); // سيتم عرض جميع الإيصالات في صفحة الطباعة
   };
 
   // حفظ رقم جديد
@@ -1400,7 +1403,7 @@ const DeliveryReceipt = () => {
               background-repeat: repeat;
               background-size: cover;
               background-position: center;
-              -webkit-print-color-adjust: exact;
+              -webkit-print-color-adjust: exact; /* لضمان طباعة الخلفية */
               print-color-adjust: exact;
             }
             .watermark-bg {
@@ -1411,117 +1414,167 @@ const DeliveryReceipt = () => {
         `}
       </style>
       <h2 className="text-2xl font-bold text-blue-700 mb-6">إيصال المندوب</h2>
-      <div className="mb-6 max-w-md">
-        <label className="block mb-2 font-semibold text-gray-700">
-          اختر الطلب
-        </label>
+      {/* فلتر المحافظة */}
+      <div className="mb-4 max-w-md">
+        <label className="block mb-2 font-semibold text-gray-700">تصفية حسب المحافظة</label>
         <select
           className="border-2 border-brand-olive rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-brand-brown bg-white text-brand-dark font-bold"
-          value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
+          value={govFilter}
+          onChange={e => {
+            setGovFilter(e.target.value);
+            setSelectedId(""); // إعادة تعيين الطلب المختار عند تغيير المحافظة
+          }}
         >
-          <option value="">-- اختر طلبًا --</option>
-          {orders.map((order) => (
-            <option key={order.id} value={order.id}>
-              {order.customerName} - {order.phone} - {order.orderDate}
-            </option>
+          <option value="">كل المحافظات</option>
+          {allGovernorates.map((gov, i) => (
+            <option key={i} value={gov}>{gov}</option>
           ))}
         </select>
       </div>
-      {selectedOrder && (
-        <>
-          {/* ملخص بيانات الطلب للواتساب */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 max-w-lg mx-auto">
-            <h4 className="font-bold text-blue-800 mb-2 text-lg">ملخص الطلب لإرساله عبر واتساب:</h4>
-            <table className="w-full text-right mb-2">
-              <tbody>
-                <tr>
-                  <td className="font-bold text-blue-900">اسم العميل:</td>
-                  <td>{selectedOrder.customerName}</td>
-                </tr>
-                <tr>
-                  <td className="font-bold text-blue-900">رقم الموبايل:</td>
-                  <td>{selectedOrder.phone}</td>
-                </tr>
-                <tr>
-                  <td className="font-bold text-blue-900">الطلب:</td>
-                  <td>{selectedOrder.products.map((p) => p.type).filter(Boolean).join(" + ")}</td>
-                </tr>
-                <tr>
-                  <td className="font-bold text-blue-900">العنوان:</td>
-                  <td>{selectedOrder.address}</td>
-                </tr>
-                <tr>
-                  <td className="font-bold text-blue-900">السعر الكلي:</td>
-                  <td>{selectedOrder.products.reduce((sum, p) => sum + (Number(p.price) || 0) * (Number(p.quantity) || 0), 0)} جنيه</td>
-                </tr>
-              </tbody>
-            </table>
-            {/* قائمة الأرقام المحفوظة */}
-            <div className="flex flex-col md:flex-row gap-2 items-stretch mt-2 w-full max-w-full">
-              <select
-                className="border border-blue-300 rounded-lg px-3 py-2 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                onChange={handleSelectSavedNumber}
-                value={whatsAppNumber || ""}
-              >
-                <option value="">اختر رقم محفوظ...</option>
-                {savedWhatsAppNumbers.map((n) => (
-                  <option key={n.phone} value={n.phone}>
-                    {n.name} - {n.phone}
-                  </option>
-                ))}
-              </select>
-              {/* زر حذف الرقم المحفوظ */}
-              {whatsAppNumber && savedWhatsAppNumbers.some((n) => n.phone === whatsAppNumber) && (
+      {/* أزرار العمليات الجماعية */}
+      {govFilter && filteredOrders.length > 0 && (
+        <div className="flex flex-col gap-4 mb-8">
                 <button
-                  type="button"
-                  className="text-red-600 font-bold px-2 py-1 rounded hover:bg-red-100 w-full md:w-auto"
-                  onClick={() => handleDeleteWhatsAppNumber(whatsAppNumber)}
+            onClick={handlePrintAll}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition w-full"
                 >
-                  حذف
+            طباعة جميع الإيصالات
                 </button>
-              )}
-            </div>
-            {/* إدخال اسم ورقم جديد وحفظهما */}
-            <div className="flex flex-col md:flex-row gap-2 items-stretch mt-2 w-full max-w-full">
-              <input
-                type="text"
-                className="border border-blue-300 rounded-lg px-3 py-2 w-full md:w-48 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="اسم صاحب الرقم"
-                value={whatsAppName}
-                onChange={e => setWhatsAppName(e.target.value)}
-              />
-              <input
-                type="text"
-                className="border border-blue-300 rounded-lg px-3 py-2 w-full md:w-48 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="رقم واتساب (مثال: 201234567890)"
-                value={whatsAppNumber}
-                onChange={e => setWhatsAppNumber(e.target.value)}
-              />
+          {/* قائمة الطلبات مع زر واتساب لكل طلب */}
+          <div className="space-y-2">
+            {filteredOrders.map(order => (
+              <div key={order.id} className="flex items-center gap-2 bg-blue-50 rounded-lg px-3 py-2">
+                <span className="flex-1 font-bold text-brand-dark">{order.customerName} - {order.phone}</span>
               <button
-                onClick={handleSaveWhatsAppNumber}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-blue-600 transition w-full md:w-auto"
-                type="button"
-                disabled={!whatsAppName || !whatsAppNumber}
-              >
-                حفظ الرقم
+                  onClick={() => {
+                    const msg = encodeURIComponent(getWhatsAppMessage(order));
+                    const phone = order.phone.startsWith("+2") ? order.phone : `+2${order.phone}`;
+                    window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+                  }}
+                  className="bg-green-600 text-white px-3 py-1 rounded-lg font-bold shadow hover:bg-green-700 transition"
+                >
+                  إرسال عبر واتساب
               </button>
             </div>
-            {/* زر إرسال إلى واتساب */}
-            <div className="flex flex-col md:flex-row gap-2 items-stretch mt-2 w-full max-w-full">
-              <button
-                onClick={handleSendWhatsApp}
-                className="bg-green-500 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-green-600 transition w-full md:w-auto"
-                disabled={!whatsAppNumber}
-                type="button"
+            ))}
+          </div>
+        </div>
+      )}
+      {/* عرض جميع الإيصالات عند اختيار محافظة */}
+      {govFilter && filteredOrders.length > 0 && (
+        <>
+          {console.log('طلبات المحافظة المختارة:', filteredOrders)}
+          <div className="space-y-8 print:space-y-0">
+            {filteredOrders.map(order => (
+              <div
+                key={order.id}
+                ref={order.id === Number(selectedId) ? printRef : null}
+                className="print-receipt bg-white border border-blue-300 rounded-2xl p-8 shadow-2xl max-w-lg mb-8 print:border-0 print:shadow-none relative overflow-hidden page-break-after print:page-break-after-always"
               >
-                إرسال إلى واتساب
-              </button>
+                <div
+                  className="watermark-bg"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundImage: `url(${logo})`,
+                    backgroundRepeat: "repeat",
+                    backgroundPosition: "center",
+                    backgroundSize: "cover",
+                    opacity: 0.15,
+                    filter: "grayscale(1) contrast(1.5)",
+                    zIndex: 1,
+                    pointerEvents: "none",
+                  }}
+                />
+                <div style={{ position: "relative", zIndex: 2 }}>
+                  <h3 className="text-2xl font-extrabold text-blue-900 mb-6 text-center tracking-wide">
+                    إيصال تسليم طلب
+                  </h3>
+                  <div
+                    className="mb-6 flex flex-col gap-2 text-lg text-gray-900 text-right"
+                    dir="rtl"
+                  >
+                    <div className="flex items-center gap-1">
+                      <span className="font-bold text-blue-900">اسم العميل:</span>
+                      <span className="text-gray-900">{order.customerName}</span>
             </div>
+                    <div className="flex items-center gap-1">
+                      <span className="font-bold text-blue-900">رقم الهاتف:</span>
+                      <span className="text-gray-900">{order.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="font-bold text-blue-900">العنوان:</span>
+                      <span className="text-gray-900">{order.address}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="font-bold text-blue-900">تاريخ الطلب:</span>
+                      <span className="text-gray-900">{order.orderDate}</span>
+                    </div>
+                  </div>
+                  <div className="mb-2 font-bold mt-6 text-blue-700 text-lg">
+                    تفاصيل الطلب:
+                  </div>
+                  <table className="w-full mb-6 border border-blue-200 rounded-xl overflow-hidden print:border-none">
+                    <thead>
+                      <tr className="bg-blue-100 text-blue-900 text-lg">
+                        <th className="py-3 px-2 border-b border-blue-200">المنتج</th>
+                        <th className="py-3 px-2 border-b border-blue-200">الكمية</th>
+                        <th className="py-3 px-2 border-b border-blue-200">السعر</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {order.products.map((p, i) => (
+                        <tr key={i} className="even:bg-blue-50">
+                          <td className="py-2 px-2 border-b border-blue-100 text-center font-bold text-gray-900">
+                            {p.type}
+                          </td>
+                          <td className="py-2 px-2 border-b border-blue-100 text-center font-bold text-blue-900">
+                            {p.quantity}
+                          </td>
+                          <td className="py-2 px-2 border-b border-blue-100 text-center font-bold text-green-800">
+                            {p.price ? p.price + " جنيه" : "-"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="text-xl font-extrabold text-green-700 text-right mb-6">
+                    الإجمالي: {order.products.reduce((sum, p) => sum + Number(p.price || 0) * Number(p.quantity || 0), 0)} جنيه
+                  </div>
+                  <div className="flex justify-between mt-10 print:mt-4 text-lg text-gray-900">
+                    <div className="font-bold">توقيع المندوب: _______________</div>
+                    <div className="font-bold">توقيع العميل: _______________</div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </>
       )}
-      {selectedOrder && (
+      {/* الوضع القديم: اختيار طلب واحد */}
+      {!govFilter && (
+        <div className="mb-6 max-w-md">
+          <label className="block mb-2 font-semibold text-gray-700">
+            اختر الطلب
+          </label>
+          <select
+            className="border-2 border-brand-olive rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-brand-brown bg-white text-brand-dark font-bold"
+            value={selectedId}
+            onChange={(e) => setSelectedId(e.target.value)}
+          >
+            <option value="">-- اختر طلبًا --</option>
+            {filteredOrders.map((order) => (
+              <option key={order.id} value={order.id}>
+                {order.customerName} - {order.phone} - {order.orderDate}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+      {/* عرض إيصال واحد فقط إذا لم يتم اختيار محافظة */}
+      {!govFilter && selectedOrder && (
         <div
           ref={printRef}
           className="print-receipt bg-white border border-blue-300 rounded-2xl p-8 shadow-2xl max-w-lg mb-8 print:border-0 print:shadow-none relative overflow-hidden"
@@ -1553,9 +1606,7 @@ const DeliveryReceipt = () => {
             >
               <div className="flex items-center gap-1">
                 <span className="font-bold text-blue-900">اسم العميل:</span>
-                <span className="text-gray-900">
-                  {selectedOrder.customerName}
-                </span>
+                <span className="text-gray-900">{selectedOrder.customerName}</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="font-bold text-blue-900">رقم الهاتف:</span>
@@ -1598,13 +1649,7 @@ const DeliveryReceipt = () => {
               </tbody>
             </table>
             <div className="text-xl font-extrabold text-green-700 text-right mb-6">
-              الإجمالي:{" "}
-              {selectedOrder.products.reduce(
-                (sum, p) =>
-                  sum + Number(p.price || 0) * Number(p.quantity || 0),
-                0
-              )}{" "}
-              جنيه
+              الإجمالي: {selectedOrder.products.reduce((sum, p) => sum + Number(p.price || 0) * Number(p.quantity || 0), 0)} جنيه
             </div>
             <div className="flex justify-between mt-10 print:mt-4 text-lg text-gray-900">
               <div className="font-bold">توقيع المندوب: _______________</div>
@@ -1613,7 +1658,6 @@ const DeliveryReceipt = () => {
           </div>
         </div>
       )}
-
       {selectedOrder && (
         <div className="flex gap-4">
           <button

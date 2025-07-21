@@ -14,6 +14,9 @@ import { InventoryProvider } from './contexts/InventoryContext';
 import { ProductsProvider } from './contexts/ProductsContext';
 import DeliveryReceipt from './components/DeliveryReceipt';
 import CustomerStats from './components/CustomerStats';
+import OrdersMap from './pages/OrdersMap';
+import CompletedOrders from './pages/CompletedOrders';
+import NotedCustomers from './pages/NotedCustomers';
 import './App.css';
 
 function App() {
@@ -39,6 +42,9 @@ function App() {
                     <Route path="/reports" element={<ReportsAnalytics />} />
                     <Route path="/receipt" element={<DeliveryReceipt />} />
                     <Route path="/customer-stats" element={<CustomerStats />} />
+                    <Route path="/orders-map" element={<OrdersMap />} />
+                    <Route path="/completed-orders" element={<CompletedOrders />} />
+                    <Route path="/noted-customers" element={<NotedCustomers />} />
                   </Routes>
                 </div>
               </main>

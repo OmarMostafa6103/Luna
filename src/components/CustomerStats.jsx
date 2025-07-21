@@ -15,7 +15,7 @@ const LOCAL_KEY = "customer_stats_data";
 
 export default function CustomerStats() {
   const [customers, setCustomers] = useState([]);
-  const [form, setForm] = useState({ name: "", status: DEFAULT_STATUS_OPTIONS[0].value, notes: "", category: "" });
+  const [form, setForm] = useState({ name: "", status: DEFAULT_STATUS_OPTIONS[0].value, notes: "", category: "", id: null });
   const [editIndex, setEditIndex] = useState(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("");
@@ -61,13 +61,15 @@ export default function CustomerStats() {
     if (!form.name.trim()) return;
     if (editIndex !== null) {
       const updated = [...customers];
-      updated[editIndex] = form;
+      // احتفظ بنفس id القديم
+      updated[editIndex] = { ...form, id: customers[editIndex].id };
       setCustomers(updated);
       setEditIndex(null);
     } else {
-      setCustomers([...customers, form]);
+      // أضف id جديد
+      setCustomers([...customers, { ...form, id: Date.now() }]);
     }
-    setForm({ name: "", status: statusOptions[0].value, notes: "", category: "" });
+    setForm({ name: "", status: statusOptions[0].value, notes: "", category: "", id: null });
   };
 
   const handleEdit = (idx) => {
@@ -148,25 +150,25 @@ export default function CustomerStats() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-2 sm:p-4 md:p-6">
-      <h2 className="text-2xl sm:text-3xl font-extrabold mb-2 text-center text-brand-brown drop-shadow">إدارة بيانات العملاء</h2>
-      <p className="text-center text-gray-500 mb-4 sm:mb-6 text-sm sm:text-base">أضف، صنف، وعدل بيانات العملاء بسهولة واحترافية</p>
-      <form onSubmit={handleSubmit} className="bg-white/90 rounded-2xl shadow-lg p-2 sm:p-4 md:p-6 mb-6 sm:mb-8 flex flex-col gap-3 sm:gap-4 border border-brand-beige/40">
-        <div className="flex flex-col md:flex-row gap-2 sm:gap-4">
+    <div className="max-w-5xl mx-auto p-2 sm:p-4 md:p-6 w-full">
+      <h2 className="text-lg sm:text-2xl md:text-3xl font-extrabold mb-2 text-center text-brand-brown drop-shadow">إدارة بيانات العملاء</h2>
+      <p className="text-center text-gray-500 mb-4 sm:mb-6 text-xs sm:text-base">أضف، صنف، وعدل بيانات العملاء بسهولة واحترافية</p>
+      <form onSubmit={handleSubmit} className="bg-white/90 rounded-2xl shadow-lg p-2 sm:p-4 md:p-6 mb-6 sm:mb-8 flex flex-col gap-3 sm:gap-4 border border-brand-beige/40 w-full">
+        <div className="flex flex-col md:flex-row gap-2 sm:gap-4 w-full">
           <input
             name="name"
             value={form.name}
             onChange={handleChange}
             placeholder="اسم العميل"
-            className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 text-sm sm:text-base flex-1 focus:ring-2 focus:ring-brand-brown/30 transition"
+            className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 text-xs sm:text-base flex-1 focus:ring-2 focus:ring-brand-brown/30 transition"
             required
           />
-          <div className="flex flex-col flex-1 min-w-[140px] sm:min-w-[180px]">
+          <div className="flex flex-col flex-1 min-w-[120px] sm:min-w-[180px]">
             <select
               name="status"
               value={form.status}
               onChange={handleChange}
-              className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 mb-1 text-sm sm:text-base focus:ring-2 focus:ring-brand-brown/30 transition"
+              className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 mb-1 text-xs sm:text-base focus:ring-2 focus:ring-brand-brown/30 transition"
             >
               {statusOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -178,7 +180,7 @@ export default function CustomerStats() {
                 value={newStatus}
                 onChange={e => setNewStatus(e.target.value)}
                 placeholder="إضافة حالة جديدة..."
-                className="border border-brand-brown/30 rounded-lg px-2 py-1 text-sm sm:text-base flex-1 focus:ring-2 focus:ring-brand-brown/30 transition"
+                className="border border-brand-brown/30 rounded-lg px-2 py-1 text-xs sm:text-base flex-1 focus:ring-2 focus:ring-brand-brown/30 transition"
               />
               <button
                 type="button"
@@ -194,33 +196,33 @@ export default function CustomerStats() {
             value={form.category}
             onChange={handleChange}
             placeholder="تصنيف (اختياري)"
-            className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 text-sm sm:text-base flex-1 focus:ring-2 focus:ring-brand-brown/30 transition"
+            className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 text-xs sm:text-base flex-1 focus:ring-2 focus:ring-brand-brown/30 transition"
           />
           <input
             name="notes"
             value={form.notes}
             onChange={handleChange}
             placeholder="ملاحظات (اختياري)"
-            className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 text-sm sm:text-base flex-1 focus:ring-2 focus:ring-brand-brown/30 transition"
+            className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 text-xs sm:text-base flex-1 focus:ring-2 focus:ring-brand-brown/30 transition"
           />
         </div>
-        <button type="submit" className="bg-brand-brown text-white rounded-lg px-4 sm:px-6 py-2 self-end hover:bg-brand-dark transition flex items-center gap-2 shadow text-sm sm:text-base">
+        <button type="submit" className="bg-brand-brown text-white rounded-lg px-3 sm:px-6 py-2 self-end hover:bg-brand-dark transition flex items-center gap-2 shadow text-xs sm:text-base">
           {editIndex !== null ? <FaEdit /> : <FaPlus />} {editIndex !== null ? "تعديل" : "إضافة"}
         </button>
       </form>
       {/* أدوات البحث والتصفية والتصدير */}
-      <div className="flex flex-col md:flex-row gap-2 sm:gap-4 mb-3 sm:mb-4 items-center justify-between">
+      <div className="flex flex-col md:flex-row gap-2 sm:gap-4 mb-3 sm:mb-4 items-center justify-between w-full">
         <input
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="بحث بالاسم أو الملاحظات..."
-          className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 w-full md:w-1/4 text-sm sm:text-base focus:ring-2 focus:ring-brand-brown/30 transition"
+          className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 w-full md:w-1/4 text-xs sm:text-base focus:ring-2 focus:ring-brand-brown/30 transition"
         />
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 w-full md:w-1/6 text-sm sm:text-base focus:ring-2 focus:ring-brand-brown/30 transition"
+          className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 w-full md:w-1/6 text-xs sm:text-base focus:ring-2 focus:ring-brand-brown/30 transition"
         >
           <option value="">كل الحالات</option>
           {statusOptions.map(opt => (
@@ -232,7 +234,7 @@ export default function CustomerStats() {
           value={categoryFilter}
           onChange={e => setCategoryFilter(e.target.value)}
           placeholder="تصفية حسب التصنيف..."
-          className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 w-full md:w-1/4 text-sm sm:text-base focus:ring-2 focus:ring-brand-brown/30 transition"
+          className="border border-brand-brown/30 rounded-lg px-2 sm:px-3 py-2 w-full md:w-1/4 text-xs sm:text-base focus:ring-2 focus:ring-brand-brown/30 transition"
         />
         <div className="flex gap-1 sm:gap-2 w-full md:w-auto">
           <button
@@ -252,9 +254,9 @@ export default function CustomerStats() {
         </div>
       </div>
       <div className="overflow-x-auto rounded-2xl shadow-lg border border-brand-beige/40 bg-white/90">
-        <table className="min-w-[600px] w-full text-center text-xs sm:text-base">
+        <table className="min-w-[340px] sm:min-w-[600px] w-full text-center text-xs sm:text-base">
           <thead>
-            <tr className="bg-brand-brown/10 text-brand-brown text-base sm:text-lg">
+            <tr className="bg-brand-brown/10 text-brand-brown text-xs sm:text-lg">
               <th className="py-2 sm:py-3 px-2 sm:px-4">الاسم</th>
               <th className="py-2 sm:py-3 px-2 sm:px-4">الحالة</th>
               <th className="py-2 sm:py-3 px-2 sm:px-4">التصنيف</th>
@@ -270,10 +272,10 @@ export default function CustomerStats() {
             ) : (
               filteredCustomers.map((c, idx) => (
                 <tr key={idx} className="border-t hover:bg-brand-brown/5 transition">
-                  <td className="py-1 sm:py-2 px-2 sm:px-4 font-semibold">{c.name}</td>
-                  <td className="py-1 sm:py-2 px-2 sm:px-4">{statusOptions.find(opt => opt.value === c.status)?.label || c.status}</td>
-                  <td className="py-1 sm:py-2 px-2 sm:px-4">{c.category}</td>
-                  <td className="py-1 sm:py-2 px-2 sm:px-4">{c.notes}</td>
+                  <td className="py-1 sm:py-2 px-2 sm:px-4 font-semibold break-words max-w-[120px]">{c.name}</td>
+                  <td className="py-1 sm:py-2 px-2 sm:px-4 break-words max-w-[100px]">{statusOptions.find(opt => opt.value === c.status)?.label || c.status}</td>
+                  <td className="py-1 sm:py-2 px-2 sm:px-4 break-words max-w-[100px]">{c.category}</td>
+                  <td className="py-1 sm:py-2 px-2 sm:px-4 break-words max-w-[140px]">{c.notes}</td>
                   <td className="py-1 sm:py-2 px-2 sm:px-4 flex flex-col md:flex-row gap-1 sm:gap-2 justify-center items-center">
                     <button onClick={() => handleEdit(customers.indexOf(c))} className="bg-yellow-400 text-white px-2 sm:px-3 py-1 rounded-lg hover:bg-yellow-500 flex items-center gap-1 shadow text-xs sm:text-base"><FaEdit />تعديل</button>
                     <button onClick={() => handleDelete(customers.indexOf(c))} className="bg-red-500 text-white px-2 sm:px-3 py-1 rounded-lg hover:bg-red-600 flex items-center gap-1 shadow text-xs sm:text-base"><FaTrash />حذف</button>
