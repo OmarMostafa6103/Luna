@@ -1043,16 +1043,28 @@ const KitchenDashboard = () => {
   }, [orderDoneCounts]);
 
   // تحديث عدد المنجز لمنتج معين
+  // تحسين دالة handleOrderDoneChange
   const handleOrderDoneChange = useCallback((orderId, type, value) => {
-    const parsedValue = Number(value);
-    if (isNaN(parsedValue)) return;
+    console.log(
+      `Input change - OrderID: ${orderId}, Type: ${type}, Value: ${value}`
+    );
+    const parsedValue = value === "" ? 0 : Number(value);
+    if (isNaN(parsedValue)) {
+      console.warn(`Invalid input for ${type}: ${value}`);
+      return;
+    }
     setOrderDoneCounts((prev) => {
       const prevOrder = prev[orderId] || {};
+      const newValue = Math.max(
+        0,
+        Math.min(parsedValue, Number.MAX_SAFE_INTEGER)
+      );
+      console.log(`Updating ${type} for order ${orderId} to ${newValue}`);
       return {
         ...prev,
         [orderId]: {
           ...prevOrder,
-          [type]: Math.max(0, parsedValue),
+          [type]: newValue,
         },
       };
     });
@@ -1314,7 +1326,7 @@ const KitchenDashboard = () => {
                     </div>
                   ) : (
                     <>
-                      <div className="block sm:hidden space-y-4">
+                      {/* <div className="block sm:hidden space-y-4">
                         {govOrders.map((order, idx) => {
                           const doneForOrder =
                             order.id && orderDoneCounts[order.id]
@@ -1395,6 +1407,7 @@ const KitchenDashboard = () => {
                           );
                         })}
                       </div>
+
                       <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {govOrders.map((order, idx) => {
                           const doneForOrder =
@@ -1457,6 +1470,189 @@ const KitchenDashboard = () => {
                                         )
                                       }
                                       className="w-20 border-2 border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
+                                      placeholder={`0 من ${p.quantity}`}
+                                      disabled={allDone}
+                                    />
+                                    <span className="text-xs text-gray-500">
+                                      من {p.quantity}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                              {allDone && (
+                                <span className="mt-2 text-green-700 font-bold">
+                                  مكتمل بنجاح!
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div> */}
+                      // تعديل حقل الإدخال في قسم الموبايل
+                      <div className="block sm:hidden space-y-4">
+                        {govOrders.map((order, idx) => {
+                          const doneForOrder =
+                            order.id && orderDoneCounts[order.id]
+                              ? orderDoneCounts[order.id]
+                              : {};
+                          const allDone = (order.products || []).every((p) => {
+                            const done = doneForOrder[p.type] || 0;
+                            console.log(
+                              `Product: ${p.type}, Done: ${done}, Quantity: ${p.quantity}`
+                            );
+                            return done >= Number(p.quantity);
+                          });
+                          return (
+                            <div
+                              key={
+                                order.id ? `order-${order.id}` : `row-${idx}`
+                              }
+                              className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4 flex flex-col gap-2"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-bold text-orange-800">
+                                  {(order.products || [])
+                                    .map((p) => p.type)
+                                    .join(", ")}
+                                </span>
+                                <span className="bg-orange-200 text-orange-900 px-2 py-1 rounded text-xs">
+                                  {order.governorate}
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-500 mb-1">
+                                تاريخ: {order.date}
+                              </div>
+                              <div className="flex flex-wrap gap-2 mb-2">
+                                {(order.products || []).map((p, i) => (
+                                  <span
+                                    key={`${p.type}-${i}`}
+                                    className="bg-orange-100 text-orange-900 px-2 py-1 rounded text-xs"
+                                  >
+                                    {p.type}: {p.quantity}
+                                  </span>
+                                ))}
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {(order.products || []).map((p, i) => (
+                                  <div
+                                    key={`${p.type}-${i}`}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <span className="text-xs font-semibold text-brand-dark">
+                                      {p.type}:
+                                    </span>
+                                    <input
+                                      type="number"
+                                      inputmode="numeric"
+                                      min="0"
+                                      max={p.quantity}
+                                      value={doneForOrder[p.type] ?? "0"}
+                                      onChange={(e) =>
+                                        handleOrderDoneChange(
+                                          order.id ?? idx,
+                                          p.type,
+                                          e.target.value
+                                        )
+                                      }
+                                      onInput={(e) =>
+                                        handleOrderDoneChange(
+                                          order.id ?? idx,
+                                          p.type,
+                                          e.target.value
+                                        )
+                                      }
+                                      className="w-20 border-2 border-gray-200 rounded-lg px-2 py-2 text-sm touch-action-manipulation focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
+                                      placeholder={`0 من ${p.quantity}`}
+                                      disabled={allDone}
+                                    />
+                                    <span className="text-xs text-gray-500">
+                                      من {p.quantity}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                              {allDone && (
+                                <span className="mt-2 text-green-700 font-bold text-xs">
+                                  مكتمل بنجاح!
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      // تعديل حقل الإدخال في قسم الشاشات الأكبر
+                      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {govOrders.map((order, idx) => {
+                          const doneForOrder =
+                            order.id && orderDoneCounts[order.id]
+                              ? orderDoneCounts[order.id]
+                              : {};
+                          const allDone = (order.products || []).every((p) => {
+                            const done = doneForOrder[p.type] || 0;
+                            console.log(
+                              `Product: ${p.type}, Done: ${done}, Quantity: ${p.quantity}`
+                            );
+                            return done >= Number(p.quantity);
+                          });
+                          return (
+                            <div
+                              key={
+                                order.id ? `order-${order.id}` : `row-${idx}`
+                              }
+                              className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4 flex flex-col gap-2 mb-4"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-bold text-orange-800 text-lg">
+                                    {(order.products || [])
+                                      .map((p) => p.type)
+                                      .join(", ")}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    محافظة: {order.governorate}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    تاريخ: {order.date}
+                                  </p>
+                                </div>
+                                <span className="bg-orange-200 text-orange-900 px-3 py-1 rounded-full text-sm font-bold">
+                                  {(order.products || []).reduce(
+                                    (sum, p) => sum + Number(p.quantity),
+                                    0
+                                  )}{" "}
+                                  مطلوب
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-4 mt-2">
+                                {(order.products || []).map((p, i) => (
+                                  <div
+                                    key={`${p.type}-${i}`}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <span className="text-sm font-semibold text-brand-dark">
+                                      {p.type}:
+                                    </span>
+                                    <input
+                                      type="number"
+                                      inputmode="numeric"
+                                      min="0"
+                                      max={p.quantity}
+                                      value={doneForOrder[p.type] ?? "0"}
+                                      onChange={(e) =>
+                                        handleOrderDoneChange(
+                                          order.id ?? idx,
+                                          p.type,
+                                          e.target.value
+                                        )
+                                      }
+                                      onInput={(e) =>
+                                        handleOrderDoneChange(
+                                          order.id ?? idx,
+                                          p.type,
+                                          e.target.value
+                                        )
+                                      }
+                                      className="w-24 border-2 border-gray-200 rounded-lg px-2 py-2 text-sm touch-action-manipulation focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
                                       placeholder={`0 من ${p.quantity}`}
                                       disabled={allDone}
                                     />
