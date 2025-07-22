@@ -1044,17 +1044,16 @@ const KitchenDashboard = () => {
 
   // تحديث عدد المنجز لمنتج معين
   const handleOrderDoneChange = useCallback((orderId, type, value) => {
-    const parsedValue = value === "" ? 0 : parseInt(value, 10);
-    if (isNaN(parsedValue)) return;
+    // تأكد من أنها أرقام فقط (أثناء الكتابة)
+    if (!/^\d*$/.test(value)) return;
 
     setOrderDoneCounts((prev) => {
       const prevOrder = prev[orderId] || {};
-      const newValue = Math.min(parsedValue, Number.MAX_SAFE_INTEGER);
       return {
         ...prev,
         [orderId]: {
           ...prevOrder,
-          [type]: newValue,
+          [type]: value, // بدون تحويل لرقم الآن
         },
       };
     });
@@ -1090,7 +1089,8 @@ const KitchenDashboard = () => {
       const doneForOrder = orderDoneCounts[order.id] || {};
       return (
         (order.products || []).every((p) => {
-          const done = doneForOrder[p.type] || 0;
+          const done = parseInt(doneForOrder[p.type], 10) || 0;
+
           return done >= Number(p.quantity);
         }) && !autoCompleted.includes(order.id)
       );
@@ -1531,26 +1531,18 @@ const KitchenDashboard = () => {
                                     <span className="text-xs font-semibold text-brand-dark">
                                       {p.type}:
                                     </span>
-
                                     <input
                                       type="text"
                                       inputMode="numeric"
                                       pattern="[0-9]*"
-                                      value={
-                                        doneForOrder[p.type] !== undefined
-                                          ? doneForOrder[p.type]
-                                          : ""
+                                      value={doneForOrder[p.type] ?? ""}
+                                      onChange={(e) =>
+                                        handleOrderDoneChange(
+                                          order.id ?? idx,
+                                          p.type,
+                                          e.target.value
+                                        )
                                       }
-                                      onChange={(e) => {
-                                        const val = e.target.value;
-                                        if (/^\d*$/.test(val)) {
-                                          handleOrderDoneChange(
-                                            order.id ?? idx,
-                                            p.type,
-                                            val
-                                          );
-                                        }
-                                      }}
                                       className="w-20 border-2 border-gray-200 rounded-lg px-2 py-2 text-sm touch-action-manipulation focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
                                       placeholder={`0 من ${p.quantity}`}
                                       disabled={allDone}
@@ -1628,21 +1620,14 @@ const KitchenDashboard = () => {
                                       type="text"
                                       inputMode="numeric"
                                       pattern="[0-9]*"
-                                      value={
-                                        doneForOrder[p.type] !== undefined
-                                          ? doneForOrder[p.type]
-                                          : ""
+                                      value={doneForOrder[p.type] ?? ""}
+                                      onChange={(e) =>
+                                        handleOrderDoneChange(
+                                          order.id ?? idx,
+                                          p.type,
+                                          e.target.value
+                                        )
                                       }
-                                      onChange={(e) => {
-                                        const val = e.target.value;
-                                        if (/^\d*$/.test(val)) {
-                                          handleOrderDoneChange(
-                                            order.id ?? idx,
-                                            p.type,
-                                            val
-                                          );
-                                        }
-                                      }}
                                       className="w-20 border-2 border-gray-200 rounded-lg px-2 py-2 text-sm touch-action-manipulation focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
                                       placeholder={`0 من ${p.quantity}`}
                                       disabled={allDone}
