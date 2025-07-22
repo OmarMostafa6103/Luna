@@ -1543,10 +1543,14 @@ const KitchenDashboard = () => {
                                     </span>
                                     <input
                                       type="number"
-                                      inputmode="numeric"
+                                      inputMode="numeric"
                                       min="0"
                                       max={p.quantity}
-                                      value={doneForOrder[p.type] ?? "0"}
+                                      value={
+                                        doneForOrder[p.type] !== undefined
+                                          ? doneForOrder[p.type]
+                                          : ""
+                                      }
                                       onChange={(e) =>
                                         handleOrderDoneChange(
                                           order.id ?? idx,
@@ -1564,6 +1568,7 @@ const KitchenDashboard = () => {
                                       className="w-20 border-2 border-gray-200 rounded-lg px-2 py-2 text-sm touch-action-manipulation focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
                                       placeholder={`0 من ${p.quantity}`}
                                       disabled={allDone}
+                                      onFocus={(e) => e.target.select()} // تحديد النص عند التركيز
                                     />
                                     <span className="text-xs text-gray-500">
                                       من {p.quantity}
@@ -1634,10 +1639,14 @@ const KitchenDashboard = () => {
                                     </span>
                                     <input
                                       type="number"
-                                      inputmode="numeric"
+                                      inputMode="numeric"
                                       min="0"
                                       max={p.quantity}
-                                      value={doneForOrder[p.type] ?? "0"}
+                                      value={
+                                        doneForOrder[p.type] !== undefined
+                                          ? doneForOrder[p.type]
+                                          : ""
+                                      }
                                       onChange={(e) =>
                                         handleOrderDoneChange(
                                           order.id ?? idx,
@@ -1655,6 +1664,7 @@ const KitchenDashboard = () => {
                                       className="w-24 border-2 border-gray-200 rounded-lg px-2 py-2 text-sm touch-action-manipulation focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
                                       placeholder={`0 من ${p.quantity}`}
                                       disabled={allDone}
+                                      onFocus={(e) => e.target.select()} // تحديد النص عند التركيز
                                     />
                                     <span className="text-xs text-gray-500">
                                       من {p.quantity}
