@@ -1043,21 +1043,18 @@ const KitchenDashboard = () => {
   }, [orderDoneCounts]);
 
   // تحديث عدد المنجز لمنتج معين
-  const handleOrderDoneChange = useCallback((orderId, type, value) => {
-    // تأكد من أنها أرقام فقط (أثناء الكتابة)
-    if (!/^\d*$/.test(value)) return;
-
+  const handleOrderDoneChange = (orderId, type, value) => {
     setOrderDoneCounts((prev) => {
       const prevOrder = prev[orderId] || {};
       return {
         ...prev,
         [orderId]: {
           ...prevOrder,
-          [type]: value, // بدون تحويل لرقم الآن
+          [type]: Math.max(0, Number(value)),
         },
       };
     });
-  }, []);
+  };
 
   // حالة لتتبع الطلبات التي تم إنجازها للتو
   const [justCompleted, setJustCompleted] = useState([]);
@@ -1532,21 +1529,20 @@ const KitchenDashboard = () => {
                                       {p.type}:
                                     </span>
                                     <input
-                                      type="text"
-                                      inputMode="numeric"
-                                      pattern="[0-9]*"
-                                      value={doneForOrder[p.type] ?? ""}
+                                      type="number"
+                                      min="0"
+                                      max={p.quantity}
+                                      value={doneForOrder[p.type] || ""}
                                       onChange={(e) =>
                                         handleOrderDoneChange(
-                                          order.id ?? idx,
+                                          order.id,
                                           p.type,
                                           e.target.value
                                         )
                                       }
-                                      className="w-20 border-2 border-gray-200 rounded-lg px-2 py-2 text-sm touch-action-manipulation focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
+                                      className="w-20 border-2 border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
                                       placeholder={`0 من ${p.quantity}`}
                                       disabled={allDone}
-                                      onFocus={(e) => e.target.select()}
                                     />
 
                                     <span className="text-xs text-gray-500">
@@ -1617,21 +1613,20 @@ const KitchenDashboard = () => {
                                       {p.type}:
                                     </span>
                                     <input
-                                      type="text"
-                                      inputMode="numeric"
-                                      pattern="[0-9]*"
-                                      value={doneForOrder[p.type] ?? ""}
+                                      type="number"
+                                      min="0"
+                                      max={p.quantity}
+                                      value={doneForOrder[p.type] || ""}
                                       onChange={(e) =>
                                         handleOrderDoneChange(
-                                          order.id ?? idx,
+                                          order.id,
                                           p.type,
                                           e.target.value
                                         )
                                       }
-                                      className="w-20 border-2 border-gray-200 rounded-lg px-2 py-2 text-sm touch-action-manipulation focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
+                                      className="w-20 border-2 border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-brown focus:border-transparent transition-all duration-300 text-center font-semibold"
                                       placeholder={`0 من ${p.quantity}`}
                                       disabled={allDone}
-                                      onFocus={(e) => e.target.select()}
                                     />
 
                                     <span className="text-xs text-gray-500">
